@@ -1,0 +1,16 @@
+# Local configuration and secrets
+.env
+
+# Kerberos secrets (generated at setup time)
+*.keytab
+*.stash
+.k5.*
+stash
+
+# Private keys and generated certificates
+*.key
+*.pem
+*.srl
+*.csr
+certs/
+keytabs/
