@@ -7,7 +7,7 @@ export
 
 # ---------- Host (Windows, Git Bash) ----------
 certs:
-	@echo "TODO: generate CA and server certificates"
+	@bash scripts/gen-certs.sh
 
 up:
 	@echo "TODO: build and start the Docker services"
