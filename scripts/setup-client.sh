@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Configures the Kali VM as the Linux client. Run through make, from the repo root:
+#   make hosts    -> scripts/setup-client.sh hosts
+#   make client   -> scripts/setup-client.sh client
 set -euo pipefail
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -62,7 +64,7 @@ do_client() {
   apt-get update -qq
   apt-get install -y -qq --no-install-recommends \
     sssd sssd-ldap sssd-krb5 libpam-sss libnss-sss libpam-modules \
-    krb5-user ldap-utils openssh-server sudo curl ca-certificates
+    krb5-user ldap-utils openssh-client-gssapi openssh-server-gssapi sudo curl ca-certificates
 
   echo "[client] Trusting the lab CA"
   install -m 644 certs/ca.crt /usr/local/share/ca-certificates/lab-ca.crt
@@ -123,7 +125,7 @@ do_client() {
 }
 
 # ---------------------------------------------------------------------------
-# clean: remove everything this script added 
+# clean: remove everything this script added (installed packages are kept)
 # ---------------------------------------------------------------------------
 do_clean() {
   echo "[client] Removing the lab configuration (packages are kept)"

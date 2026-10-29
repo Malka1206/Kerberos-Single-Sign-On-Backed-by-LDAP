@@ -49,4 +49,4 @@ clean_client:
 	@sudo bash scripts/setup-client.sh clean
 
 test:
-	@echo "TODO: run the end-to-end test suite"
+	@bash tests/run-all.sh
