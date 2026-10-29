@@ -357,8 +357,6 @@ make test
 | Read-only account | The SSSD account cannot write and cannot read Kerberos attributes |
 | Certificate validation | The LDAP certificate validates against the lab CA, and a client without the CA fails |
 
-![make test output](docs/img/01-make-test.png)
-
 ---
 
 ## 11. Packet capture
