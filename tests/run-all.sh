@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Runs every client-side test, prints PASS or FAIL for each and exits non-zero if any fails.
+# Run as the normal user (not root), through: make test
 set -uo pipefail
 
 cd "$(dirname "$0")"
@@ -9,7 +10,7 @@ if [ "$(id -u)" -eq 0 ]; then
   exit 1
 fi
 
-# The clock-skew test needs sudo.
+# The clock-skew test needs sudo: ask for the password once, up front.
 sudo -v || { echo "sudo is required for the clock-skew test." >&2; exit 1; }
 
 total=0
