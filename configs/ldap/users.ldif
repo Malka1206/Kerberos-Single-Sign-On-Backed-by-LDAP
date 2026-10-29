@@ -1,0 +1,35 @@
+dn: uid=alice,ou=people,dc=lab,dc=test
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: alice
+cn: Alice Lab
+sn: Lab
+givenName: Alice
+uidNumber: 10001
+gidNumber: 10000
+homeDirectory: /home/alice
+loginShell: /bin/bash
+
+dn: uid=bob,ou=people,dc=lab,dc=test
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: bob
+cn: Bob Lab
+sn: Lab
+givenName: Bob
+uidNumber: 10002
+gidNumber: 10000
+homeDirectory: /home/bob
+loginShell: /bin/bash
+
+dn: uid=carol,ou=people,dc=lab,dc=test
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: carol
+cn: Carol Lab
+sn: Lab
+givenName: Carol
+uidNumber: 10003
+gidNumber: 10000
+homeDirectory: /home/carol
+loginShell: /bin/bash

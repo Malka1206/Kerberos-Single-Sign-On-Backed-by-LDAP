@@ -1,0 +1,19 @@
+dn: cn=ssh-users,ou=groups,dc=lab,dc=test
+objectClass: posixGroup
+cn: ssh-users
+gidNumber: 20001
+memberUid: alice
+memberUid: bob
+
+dn: cn=admins,ou=groups,dc=lab,dc=test
+objectClass: posixGroup
+cn: admins
+gidNumber: 20002
+memberUid: alice
+
+dn: cn=web-users,ou=groups,dc=lab,dc=test
+objectClass: posixGroup
+cn: web-users
+gidNumber: 20003
+memberUid: alice
+memberUid: bob

@@ -1,0 +1,43 @@
+dn: dc=lab,dc=test
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: Lab
+dc: lab
+
+dn: ou=people,dc=lab,dc=test
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=lab,dc=test
+objectClass: organizationalUnit
+ou: groups
+
+dn: ou=services,dc=lab,dc=test
+objectClass: organizationalUnit
+ou: services
+
+dn: ou=kerberos,dc=lab,dc=test
+objectClass: organizationalUnit
+ou: kerberos
+
+dn: cn=sssd,ou=services,dc=lab,dc=test
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: sssd
+description: Read-only account used by SSSD
+userPassword: @SSSD_HASH@
+
+dn: cn=kdc,ou=services,dc=lab,dc=test
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: kdc
+description: Account used by the KDC process
+userPassword: @KDC_HASH@
+
+dn: cn=kadmin,ou=services,dc=lab,dc=test
+objectClass: organizationalRole
+objectClass: simpleSecurityObject
+cn: kadmin
+description: Account used by the Kerberos administration service
+userPassword: @KADMIN_HASH@

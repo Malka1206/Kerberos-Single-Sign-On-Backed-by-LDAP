@@ -1,0 +1,36 @@
+services:
+  ldap:
+    build:
+      context: configs/ldap
+      dockerfile_inline: |
+        FROM debian:12-slim
+        RUN sed -i '/path-exclude.*\/usr\/share\/doc/d' /etc/dpkg/dpkg.cfg.d/* 2>/dev/null || true \
+         && apt-get update \
+         && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              slapd ldap-utils krb5-kdc-ldap openssl \
+         && rm -rf /var/lib/apt/lists/* /var/lib/ldap/*
+    hostname: ldap.lab.test
+    env_file: .env
+    entrypoint: ["bash", "/configs/entrypoint.sh"]
+    ports:
+      - "${LDAP_PORT}:389"
+      - "${LDAPS_PORT}:636"
+    volumes:
+      - ./configs/ldap:/configs:ro
+      - ./certs:/certs:ro
+      - ldap-data:/var/lib/ldap
+      - ldap-config:/etc/ldap/slapd.d
+    networks:
+      default:
+        aliases:
+          - ldap.lab.test
+    healthcheck:
+      test: ["CMD", "ldapwhoami", "-Y", "EXTERNAL", "-H", "ldapi:///", "-Q"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  ldap-data:
+  ldap-config:
