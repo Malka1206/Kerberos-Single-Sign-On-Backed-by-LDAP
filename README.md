@@ -58,7 +58,7 @@ The lab is split across two machines, as in a real deployment: a **server side**
 | Side | Machine | Runs |
 |---|---|---|
 | Server | Windows 11 host | Docker containers: OpenLDAP, MIT KDC with its administration service, Apache |
-| Client | Kali Linux VM (VirtualBox) | SSSD, SSH server, Kerberos client tools |
+| Client | VM | SSSD, SSH server, Kerberos client tools |
 
 Each component is described in [section 4](#4-components).
 
@@ -96,7 +96,7 @@ flowchart LR
     WEB[Apache<br/>mod_auth_gssapi]
     KDC -- LDAPS --> LDAP
   end
-  subgraph VM["Kali Linux VM (VirtualBox): client1.lab.test"]
+  subgraph VM["client1.lab.test"]
     SSSD[SSSD<br/>ldap + krb5 providers]
     SSH[sshd<br/>GSSAPI + PAM]
     CLI[kinit / ssh / curl]
@@ -150,11 +150,11 @@ OpenLDAP is the directory and the single source of truth. It holds the user acco
 
 ### 4.2 MIT Kerberos KDC
 
-The Key Distribution Center issues and validates tickets for the realm. It runs with the LDAP backend, so principals are created in and read from OpenLDAP rather than from a local database file. Two separate processes are involved: the KDC proper, which answers ticket requests, and the administration service, which creates and modifies principals. Each connects to the directory with its own dedicated service account holding only the permissions it needs. Compared with a standalone Kerberos database, this design avoids duplicate user lists and lets directory access rules cover Kerberos data too.
+The Key Distribution Center issues and validates tickets for the realm. It runs with the LDAP backend, so principals are created in and read from OpenLDAP rather than from a local database file. Two separate processes are involved: the KDC proper, which answers ticket requests, and the administration service, which creates and modifies principals. Each connects to the directory with its own dedicated service account holding only the permissions it needs. A separate administration principal, `admin/admin`, is used by the client setup to fetch the VM's host keytab remotely (cf. [section 12](#12-limitations) for its limits). Compared with a standalone Kerberos database, this design avoids duplicate user lists and lets directory access rules cover Kerberos data too.
 
 ### 4.3 Client with SSSD
 
-The Kali VM is the Linux client. SSSD links it to the central services: identity requests go to LDAP, authentication requests go to the KDC, and the result is exposed to the system through the name-service switch and PAM. As a consequence, directory users appear as ordinary users in `id` and `getent`, can log in with a password through PAM, and get a home directory created on first login. SSSD also enforces the group-based login restriction (cf. [section 6](#6-authorization-model)) and uses a read-only directory account for its lookups.
+The  VM is the Linux client. SSSD links it to the central services: identity requests go to LDAP, authentication requests go to the KDC, and the result is exposed to the system through the name-service switch and PAM. As a consequence, directory users appear as ordinary users in `id` and `getent`, can log in with a password through PAM, and get a home directory created on first login. SSSD also enforces the group-based login restriction (cf. [section 6](#6-authorization-model)) and uses a read-only directory account for its lookups.
 
 ### 4.4 SSH with GSSAPI
 
@@ -221,23 +221,24 @@ The `carol` case is the key one: it shows that a valid ticket does not by itself
 kerberos-ldap-sso/
 ├── docker-compose.yml          Defines the ldap, kdc and web containers
 ├── .env.example                Template for environment variables and passwords
-├── .gitignore                  Excludes .env, keytabs, keys and stash files
-├── Makefile                    Entry point for all common tasks
+├── .gitignore                  
+├── Makefile                    
 ├── README.md
 ├── configs/
 │   ├── ldap/                   Kerberos schema, base, users, groups and ACL LDIF files
-│   ├── kdc/                    Kerberos configuration and entrypoint
-│   ├── apache/                 Site configuration and entrypoint
+│   ├── kdc/                    Kerberos configuration 
+│   ├── apache/                 Site configuration 
 │   └── client/                 SSSD, SSH, Kerberos and sudoers configuration
 ├── scripts/
-│   ├── gen-certs.sh            Creates the lab CA and the LDAP server certificate
-│   ├── provision-principals.sh Creates principals and links them to LDAP entries
-│   └── setup-client.sh         Configures the Kali VM as the Linux client
+│   ├── gen-certs.sh            Creates the certificate
+│   ├── provision-principals.sh Creates principals 
+│   └── setup-client.sh         Configures the  VM as the Linux client
 ├── tests/
-│   ├── run-all.sh              Runs every client-side test and prints a summary
+│   ├── run-all.sh              Runs every client-side test 
 │   └── ...                     Individual test scripts
 └── docs/
-    └── img/                    Screenshots used in this README
+    ├── env-variables.md        Description of every variable in .env
+    └── img/                    
 ```
 
 ---
@@ -249,10 +250,11 @@ kerberos-ldap-sso/
 | Windows 11 | Host machine | Runs the server side and VirtualBox |
 | Docker 29.8 | Windows host | With the Compose plugin |
 | VirtualBox | Windows host | Hosts the client VM |
-| Kali Linux VM | VirtualBox | Network mode must let the VM reach the host's published ports |
+|  Linux VM | VirtualBox | Network mode must let the VM reach the host's published ports |
 | Git Bash | Windows host | Shell used for all host-side commands; provides `bash` and `openssl` |
 | `make` | Windows host and VM | Runs the Makefile targets (installed separately on the Windows host) |
-| `bash`, `openssl` | Kali VM | Setup scripts and certificate generation |
+| `bash`, `openssl` |  VM | Setup scripts and certificate generation |
+| `openssh-client-gssapi`, `openssh-server-gssapi` |  VM | Installed by `make client`: on VM , SSH Kerberos support ships in these separate packages |
 | Free ports | Windows host | 88, 464, 749, 389, 636 and 80 (adjustable in `.env`), allowed through the host firewall for the VM |
 
 **Tested on:** Windows 11 host, Kali Linux virtual machine, Docker 29.8.
@@ -267,12 +269,13 @@ Run these commands in Git Bash.
 
 ```bash
 # 1. Get the code
-git clone https://github.com/<your-user>/kerberos-ldap-sso.git
+git clone https://github.com/Malka1206/kerberos-ldap-sso.git
 cd kerberos-ldap-sso
 
 # 2. Create your local configuration
 cp .env.example .env
 #    edit .env: set the lab passwords and the address at which the VM reaches the host
+#    (every variable is described in docs/env-variables.md)
 
 # 3. Generate the lab CA and certificates
 make certs
@@ -284,14 +287,14 @@ make up
 make provision
 ```
 
-### On the Kali VM (client side)
+### On the VM (client side)
 
 Copy the generated CA certificate from the host to the VM, then:
 
 ```bash
 # 6. Get the code and reuse the same .env values
-git clone https://github.com/<your-user>/kerberos-ldap-sso.git
-cd kerberos-ldap-sso
+git clone https://github.com/Malka1206/Kerberos-Single-Sign-On-Backed-by-LDAP.git
+cd Kerberos-Single-Sign-On-Backed-by-LDAP
 
 # 7. Add the lab hostnames to the VM's hosts file
 make hosts
@@ -315,6 +318,7 @@ make test
 | `make clean` | Host | Remove containers, volumes and generated secrets |
 | `make hosts` | VM | Add the lab hostnames to the hosts file |
 | `make client` | VM | Configure SSSD, SSH, Kerberos and sudo, and obtain the client's host keytab |
+| `make clean_client` | VM | Remove the lab configuration from the VM (installed packages are kept) |
 | `make test` | VM | Run the end-to-end test suite |
 
 ---
@@ -326,6 +330,11 @@ make test
 ```
 
 `tests/run-all.sh` runs on the client, executes every check, prints PASS or FAIL for each, and exits non-zero if any fails. The one check that needs the KDC's own log runs on the host with `make check-kdc-log`.
+
+Practical notes:
+
+- Run the suite as the normal user, not as root. It asks for the `sudo` password once, because the clock-skew test briefly sets the VM clock ten minutes ahead and then restores it.
+- Several tests fail logins on purpose. OpenSSH temporarily refuses connections from a source that fails too many logins, so after repeated runs in a row, wait about ten minutes before running the suite again.
 
 ### Positive tests
 
@@ -372,6 +381,8 @@ Kerberos traffic captured during an SSH login and opened in Wireshark with the `
 ## 12. Limitations
 
 - Single KDC and single LDAP server: no replication or failover.
+- The `admin/admin` administration principal has unrestricted rights: its ACL (`kadm5.acl`) matches every `*/admin` principal with all permissions rather than limiting it to what the client setup needs.
+- Kali does not ship SSSD, so the SSSD packages are installed from Debian stable through a pinned apt source. This is a workaround for the lab VM and is not part of the repository scripts.
 - Only one client machine, and all server components share one host, so separation between LDAP, KDC and web is logical rather than physical.
 - Private CA with manual trust distribution (the CA certificate is copied to the client by hand).
 - Secrets are handled through environment files rather than a secrets manager.
