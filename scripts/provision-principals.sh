@@ -22,6 +22,7 @@ KEYTAB_DIR="keytabs"
 : "${ALICE_PASSWORD:?missing in .env}"
 : "${BOB_PASSWORD:?missing in .env}"
 : "${CAROL_PASSWORD:?missing in .env}"
+: "${ADMIN_PASSWORD:?missing in .env}"
 
 kadm() {
   docker compose exec -T kdc kadmin.local -q "$1"
@@ -64,6 +65,18 @@ echo "[provision] User principals"
 add_user alice "$ALICE_PASSWORD"
 add_user bob   "$BOB_PASSWORD"
 add_user carol "$CAROL_PASSWORD"
+
+# admin/admin: used by the VM to fetch its host keytab (the ACL limits it to host/* keys)
+echo "[provision] Admin principal"
+ADMIN_PRINC="admin/admin@${REALM}"
+if principal_exists "$ADMIN_PRINC"; then
+  echo "[provision] $ADMIN_PRINC already exists, skipping creation"
+else
+  echo "[provision] Creating $ADMIN_PRINC"
+  printf '%s\n%s\n' "$ADMIN_PASSWORD" "$ADMIN_PASSWORD" \
+    | docker compose exec -T kdc kadmin.local -q "addprinc ${ADMIN_PRINC}"
+fi
+kadm "modprinc +requires_preauth ${ADMIN_PRINC}"
 
 echo "[provision] Service principals"
 SSH_PRINC="host/client1.${DOMAIN}@${REALM}"

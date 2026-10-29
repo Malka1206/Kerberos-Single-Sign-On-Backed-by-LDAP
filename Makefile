@@ -3,9 +3,9 @@ SHELL := bash
 -include .env
 export
 
-.PHONY: certs up provision check-kdc-log down clean hosts client test
+.PHONY: certs up provision check-kdc-log down clean hosts client clean_client test
 
-# ---------- Host ----------
+# ---------- Host (Windows, Git Bash) ----------
 certs:
 	@bash scripts/gen-certs.sh
 
@@ -40,10 +40,13 @@ clean:
 
 # ---------- Client (Kali VM) ----------
 hosts:
-	@echo "TODO: add lab hostnames to the hosts file"
+	@sudo bash scripts/setup-client.sh hosts
 
 client:
-	@echo "TODO: configure SSSD, SSH, Kerberos and sudo"
+	@sudo bash scripts/setup-client.sh client
+
+clean_client:
+	@sudo bash scripts/setup-client.sh clean
 
 test:
 	@echo "TODO: run the end-to-end test suite"

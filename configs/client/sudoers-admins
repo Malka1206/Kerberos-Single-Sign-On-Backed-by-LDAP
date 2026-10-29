@@ -1,0 +1,2 @@
+# Members of the LDAP group "admins" (resolved by SSSD) may use sudo
+%admins ALL=(ALL:ALL) ALL
