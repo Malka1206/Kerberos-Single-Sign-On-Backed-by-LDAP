@@ -17,9 +17,9 @@ dn: ou=services,dc=lab,dc=test
 objectClass: organizationalUnit
 ou: services
 
-dn: ou=kerberos,dc=lab,dc=test
-objectClass: organizationalUnit
-ou: kerberos
+dn: cn=kerberos,dc=lab,dc=test
+objectClass: krbContainer
+cn: kerberos
 
 dn: cn=sssd,ou=services,dc=lab,dc=test
 objectClass: organizationalRole

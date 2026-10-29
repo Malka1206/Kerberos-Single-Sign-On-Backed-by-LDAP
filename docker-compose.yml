@@ -31,6 +31,81 @@ services:
       retries: 20
       start_period: 10s
 
+  kdc:
+    build:
+      context: configs/kdc
+      dockerfile_inline: |
+        FROM debian:12-slim
+        RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+         && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              krb5-kdc krb5-admin-server krb5-kdc-ldap krb5-user ldap-utils \
+         && rm -rf /var/lib/apt/lists/*
+    hostname: kdc.lab.test
+    env_file: .env
+    entrypoint: ["bash", "/configs/entrypoint.sh"]
+    depends_on:
+      ldap:
+        condition: service_healthy
+    ports:
+      - "${KDC_PORT}:88/tcp"
+      - "${KDC_PORT}:88/udp"
+      - "${KADMIN_PORT}:749/tcp"
+      - "${KPASSWD_PORT}:464/tcp"
+      - "${KPASSWD_PORT}:464/udp"
+    volumes:
+      - ./configs/kdc:/configs:ro
+      - ./certs/ca.crt:/certs/ca.crt:ro
+      - kdc-data:/var/lib/krb5kdc
+    networks:
+      default:
+        aliases:
+          - kdc.lab.test
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/88"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+  web:
+    build:
+      context: configs/apache
+      dockerfile_inline: |
+        FROM debian:12-slim
+        RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+         && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              apache2 libapache2-mod-auth-gssapi krb5-user curl \
+         && a2enmod ldap authnz_ldap auth_gssapi \
+         && a2dissite 000-default \
+         && ln -sf /dev/stdout /var/log/apache2/access.log \
+         && ln -sf /dev/stderr /var/log/apache2/error.log \
+         && rm -rf /var/lib/apt/lists/*
+    hostname: web.lab.test
+    env_file: .env
+    entrypoint: ["bash", "/configs/entrypoint.sh"]
+    depends_on:
+      ldap:
+        condition: service_healthy
+      kdc:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT}:80"
+    volumes:
+      - ./configs/apache:/configs:ro
+      - ./certs/ca.crt:/certs/ca.crt:ro
+      - ./keytabs:/keytabs:ro
+    networks:
+      default:
+        aliases:
+          - web.lab.test
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/80"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
 volumes:
   ldap-data:
   ldap-config:
+  kdc-data:
