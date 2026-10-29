@@ -23,8 +23,6 @@ run_group() {
   for t in "${prefix}"-*.sh; do
     [ -e "$t" ] || continue
     total=$((total + 1))
-    # Failed logins are expected in the negative tests: reset sshd's per-source penalty.
-    sudo systemctl restart ssh >/dev/null 2>&1; sleep 1
     out="$(bash "$t" 2>&1)" && rc=0 || rc=$?
     printf '%s\n' "$out"
     [ "$rc" -eq 0 ] || failed=$((failed + 1))
